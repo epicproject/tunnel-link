@@ -210,18 +210,49 @@ $("form").onsubmit = async (e) => {
 
   try {
     const data = await decrypt(pass, envelope);
-    $("lock").classList.add("open");
-    $("url").textContent = data.url;
-    $("open").href = data.url;
-    const when = data.ts ? new Date(data.ts*1000).toLocaleString() : "";
-    $("meta").textContent = when ? ("Published " + when) : "";
-    $("result").classList.add("show");
+    activePass = pass;
+    showData(data, false);
     setMsg("");
+    startAutoRefresh();          // keep the shown link up to date automatically
   } catch {
     setMsg("Wrong passphrase, or the file is not a valid Tunnel Link.", "bad");
   }
   $("go").disabled = false;
 };
+
+// ---- show + auto-refresh (latest link replaces old one, no re-typing) ----
+let activePass = null, refreshTimer = null, lastUrl = null;
+
+function showData(data, isUpdate){
+  const changed = data.url !== lastUrl;
+  lastUrl = data.url;
+  $("lock").classList.add("open");
+  $("url").textContent = data.url;
+  $("open").href = data.url;
+  const when = data.ts ? new Date(data.ts * 1000).toLocaleString() : "";
+  $("meta").textContent = (when ? "Published " + when : "") + (isUpdate && changed ? "  ·  just updated" : "");
+  $("result").classList.add("show");
+  if (isUpdate && changed){                 // brief highlight when a new link arrives
+    const box = $("url");
+    box.style.borderColor = "var(--key)";
+    setTimeout(() => { box.style.transition = "border-color 1s"; box.style.borderColor = ""; }, 60);
+    setTimeout(() => { box.style.transition = ""; }, 1100);
+  }
+}
+
+function startAutoRefresh(){
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(refreshNow, 15000);   // check for a newer link every 15s
+}
+async function refreshNow(){
+  if (!activePass) return;
+  try {
+    const r = await fetch(rawUrl(), {cache: "no-store"});
+    if (!r.ok) return;                      // 404 / mid-publish -> keep showing the last good link
+    const data = await decrypt(activePass, await r.text());
+    showData(data, true);
+  } catch {}                                // ignore transient errors
+}
 
 $("copy").onclick = async () => {
   try { await navigator.clipboard.writeText($("url").textContent); $("copy").textContent="Copied"; setTimeout(()=>$("copy").textContent="Copy",1200); } catch {}
@@ -230,6 +261,22 @@ $("copy").onclick = async () => {
 $("foot").innerHTML = configured()
   ? `Reads <code>${CONFIG.owner}/${CONFIG.repo}/${CONFIG.path}</code> &middot; end-to-end encrypted`
   : `Not configured &mdash; set <code>CONFIG</code> in index.html`;
+</script>
+
+<script>
+// Light deterrents against casual source-viewing (right-click, F12, Ctrl+U/S, Ctrl+Shift+I/J/C).
+// NOTE: this cannot truly stop anyone -- the browser must load the code, and view-source: / curl
+// still work. It matters little here: this page holds NO secret (the passphrase is typed, never stored
+// in the page). The real protection is the passphrase + AES-256 encryption.
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  const k = (e.key || '').toLowerCase();
+  if (k === 'f12'
+      || (e.ctrlKey && e.shiftKey && (k === 'i' || k === 'j' || k === 'c'))
+      || (e.ctrlKey && (k === 'u' || k === 's'))) {
+    e.preventDefault();
+  }
+});
 </script>
 </body>
 </html>
