@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tunnel Link</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1424; --panel:#161d33; --panel2:#1d2642; --edge:#2a3557;
+    --ink:#e8ecf7; --muted:#8c96b4; --key:#f2b53b; --ok:#38d39f; --bad:#ff6b73;
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1100px 620px at 50% -12%, #1a2b4d 0, transparent 60%),
+      radial-gradient(900px 500px at 50% -10%, rgba(242,181,59,.10), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px 16px;
+  }
+  .wrap{width:100%; max-width:440px}
+  .brand{display:flex; align-items:center; gap:11px; justify-content:center; margin-bottom:22px}
+  .brand svg{width:26px; height:26px; display:block}
+  .brand b{font-weight:700; font-size:18px; letter-spacing:.2px}
+  .brand span{color:var(--muted); font-weight:500; font-size:18px}
+
+  .card{
+    background:linear-gradient(180deg, var(--panel2), var(--panel));
+    border:1px solid var(--edge); border-radius:var(--r);
+    padding:26px 24px 22px; box-shadow:0 24px 60px -30px rgba(0,0,0,.8);
+  }
+  .lock{display:flex; justify-content:center; margin:2px 0 16px}
+  .lock .ring{
+    width:72px; height:72px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 35%, rgba(242,181,59,.18), transparent 70%);
+    border:1px solid var(--edge); transition:.45s;
+  }
+  .lock.open .ring{border-color:rgba(56,211,159,.5); background:radial-gradient(circle at 50% 35%, rgba(56,211,159,.2), transparent 70%)}
+  .lock svg{width:34px; height:34px}
+  .shackle{transition:transform .45s ease}
+  .lock.open .shackle{transform:translateX(5px) translateY(-3px) rotate(14deg)}
+
+  h1{font-size:19px; font-weight:600; text-align:center; margin:0 0 4px}
+  .sub{color:var(--muted); font-size:13.5px; text-align:center; margin:0 0 20px; line-height:1.5}
+
+  label{display:block; font-size:12px; color:var(--muted); margin:0 0 7px; font-weight:600; letter-spacing:.3px}
+  .field{display:flex; gap:8px}
+  input[type=password], input[type=text]{
+    flex:1; width:100%; background:#0e1424; border:1px solid var(--edge); color:var(--ink);
+    border-radius:11px; padding:13px 14px; font-size:15px; font-family:inherit; outline:none; transition:.15s;
+  }
+  input:focus{border-color:var(--key); box-shadow:0 0 0 3px rgba(242,181,59,.16)}
+  .eye{
+    background:#0e1424; border:1px solid var(--edge); color:var(--muted); border-radius:11px;
+    width:46px; cursor:pointer; font-size:15px; transition:.15s;
+  }
+  .eye:hover{color:var(--ink); border-color:var(--key)}
+  .remember{display:flex; align-items:center; gap:8px; margin:12px 1px 0; color:var(--muted); font-size:13px; cursor:pointer; user-select:none}
+  .remember input{accent-color:var(--key); width:15px; height:15px}
+
+  button.go{
+    width:100%; margin-top:18px; border:0; border-radius:12px; cursor:pointer;
+    background:var(--key); color:#2a1d00; font-weight:700; font-size:15px; padding:14px;
+    font-family:inherit; letter-spacing:.2px; transition:.15s;
+  }
+  button.go:hover{filter:brightness(1.06)}
+  button.go:disabled{opacity:.55; cursor:default}
+
+  .msg{margin-top:14px; font-size:13px; text-align:center; min-height:18px; line-height:1.5}
+  .msg.bad{color:var(--bad)}
+  .msg.wait{color:var(--muted)}
+
+  .result{display:none; margin-top:6px}
+  .result.show{display:block; animation:rise .4s ease}
+  @keyframes rise{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+  .urlbox{
+    background:#0e1424; border:1px solid rgba(56,211,159,.4); border-radius:12px;
+    padding:13px 14px; margin-top:4px; word-break:break-all;
+    font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:13.5px; color:var(--ok);
+  }
+  .meta{color:var(--muted); font-size:11.5px; text-align:center; margin-top:9px}
+  .row{display:flex; gap:9px; margin-top:13px}
+  .row a, .row button{
+    flex:1; text-align:center; text-decoration:none; border-radius:11px; padding:12px 10px;
+    font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--edge);
+  }
+  .row .open{background:var(--ok); color:#042018; border-color:var(--ok)}
+  .row .copy{background:transparent; color:var(--ink)}
+  .row .copy:hover{border-color:var(--key)}
+  .foot{color:var(--muted); font-size:11.5px; text-align:center; margin-top:18px; line-height:1.6}
+  .foot code{color:#b9c2de; font-family:"IBM Plex Mono",monospace; font-size:11px}
+  .setup{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5.5V11c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V5.5L12 2Z" stroke="#f2b53b" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 12 2 2 4-4.5" stroke="#38d39f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><b>Tunnel</b> <span>Link</span></div>
+  </div>
+
+  <div class="card">
+    <div class="lock" id="lock">
+      <div class="ring">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path class="shackle" d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#f2b53b" stroke-width="1.7" stroke-linecap="round"/>
+          <rect x="5.5" y="10" width="13" height="9.5" rx="2.2" fill="#0e1424" stroke="#f2b53b" stroke-width="1.6"/>
+          <circle cx="12" cy="14.3" r="1.5" fill="#f2b53b"/>
+          <path d="M12 15.6v2.2" stroke="#f2b53b" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <h1>Unlock the current address</h1>
+    <p class="sub">Enter the passphrase to reveal the live tunnel link. Without it, the stored link stays encrypted.</p>
+
+    <form id="form" autocomplete="off">
+      <label for="pass">Passphrase</label>
+      <div class="field">
+        <input id="pass" type="password" placeholder="Your secret passphrase" autocomplete="off" spellcheck="false">
+        <button type="button" class="eye" id="eye" title="Show / hide">&#128065;</button>
+      </div>
+      <label class="remember"><input type="checkbox" id="remember"> Remember on this device</label>
+      <button type="submit" class="go" id="go">Unlock link</button>
+    </form>
+
+    <div class="msg" id="msg"></div>
+
+    <div class="result" id="result">
+      <div class="urlbox" id="url"></div>
+      <div class="meta" id="meta"></div>
+      <div class="row">
+        <a class="open" id="open" target="_blank" rel="noopener">Open link</a>
+        <button class="copy" id="copy">Copy</button>
+      </div>
+    </div>
+
+    <div class="foot" id="foot"></div>
+  </div>
+</div>
+
+<script type="module">
+/* ============================ CONFIG ============================
+   Set these three to the PUBLIC repo your Tunnel Setup Manager writes to.
+   (Public is fine: the link is encrypted; only the passphrase reveals it.)         */
+const CONFIG = {
+  owner:  "epicproject",            // GitHub account
+  repo:   "tunnel-link",            // the repo name
+  branch: "main",
+  path:   "link.json",              // same 'path' as in tunnel_link.ini
+};
+/* ================================================================ */
+
+const AAD = new TextEncoder().encode("tunnel-link-v1");   // must match the Python app
+const $ = id => document.getElementById(id);
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function deriveKey(passphrase, salt, it){
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(passphrase), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:it, hash:"SHA-256"}, base,
+    {name:"AES-GCM", length:256}, false, ["decrypt"]);
+}
+async function decrypt(passphrase, envelope){
+  const o = JSON.parse(envelope);
+  const key = await deriveKey(passphrase, b64d(o.salt), o.it);
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64d(o.nonce), additionalData:AAD}, key, b64d(o.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+function rawUrl(){
+  const {owner, repo, branch, path} = CONFIG;
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}?t=${Date.now()}`;
+}
+function configured(){ return CONFIG.owner && CONFIG.owner !== "YOUR_GITHUB_USERNAME"; }
+
+const KEY = "tunnel-link-pass";
+try { const sv = localStorage.getItem(KEY); if (sv){ $("pass").value = sv; $("remember").checked = true; } } catch {}
+
+$("eye").onclick = () => { const p=$("pass"); p.type = p.type==="password" ? "text" : "password"; };
+
+function setMsg(t, cls){ const m=$("msg"); m.textContent=t||""; m.className = "msg" + (cls? " "+cls : ""); }
+
+$("form").onsubmit = async (e) => {
+  e.preventDefault();
+  $("result").classList.remove("show"); $("lock").classList.remove("open");
+  const pass = $("pass").value;
+  if (!pass){ setMsg("Type the passphrase first.", "bad"); return; }
+  if (!configured()){ setMsg("This page is not set up yet. Edit CONFIG at the top of index.html.", "bad"); return; }
+
+  try { if ($("remember").checked) localStorage.setItem(KEY, pass); else localStorage.removeItem(KEY); } catch {}
+
+  $("go").disabled = true; setMsg("Fetching the encrypted link…", "wait");
+  let envelope;
+  try {
+    const r = await fetch(rawUrl(), {cache:"no-store"});
+    if (r.status === 404){ setMsg("No link published yet. Start the tunnel in the app first.", "bad"); $("go").disabled=false; return; }
+    if (!r.ok){ setMsg("Could not read the file (HTTP "+r.status+"). Check the repo settings.", "bad"); $("go").disabled=false; return; }
+    envelope = await r.text();
+  } catch {
+    setMsg("Network error reaching GitHub.", "bad"); $("go").disabled=false; return;
+  }
+
+  try {
+    const data = await decrypt(pass, envelope);
+    $("lock").classList.add("open");
+    $("url").textContent = data.url;
+    $("open").href = data.url;
+    const when = data.ts ? new Date(data.ts*1000).toLocaleString() : "";
+    $("meta").textContent = when ? ("Published " + when) : "";
+    $("result").classList.add("show");
+    setMsg("");
+  } catch {
+    setMsg("Wrong passphrase, or the file is not a valid Tunnel Link.", "bad");
+  }
+  $("go").disabled = false;
+};
+
+$("copy").onclick = async () => {
+  try { await navigator.clipboard.writeText($("url").textContent); $("copy").textContent="Copied"; setTimeout(()=>$("copy").textContent="Copy",1200); } catch {}
+};
+
+$("foot").innerHTML = configured()
+  ? `Reads <code>${CONFIG.owner}/${CONFIG.repo}/${CONFIG.path}</code> &middot; end-to-end encrypted`
+  : `Not configured &mdash; set <code>CONFIG</code> in index.html`;
+</script>
+</body>
+</html>
